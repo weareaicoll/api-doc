@@ -1,0 +1,3065 @@
+openapi: 3.0.3
+info:
+  title: Hard filters
+  description: Configuration of hard filters
+  contact:
+    email: ariel@aicoll.co
+  version: 1.0.0
+servers:
+  - url: '{protocol}://localhost/api/v1'
+    variables:
+        protocol:
+          enum:
+            - http
+            - https
+          default: https
+tags:
+  - name: Hard Filters
+    description: Hard Filters options
+  - name: Calculator Settings
+    description: Settings for credit calculator
+  - name: Credits
+    description: Entity's credits
+  - name: Identity Validation
+    description: Tools to validate user's identity
+  - name: Decision Engine
+    description: Sets next status based in user's capacity and the entity's settings
+  - name: Signature Endpoints
+    description: Endpoints used for credit's form
+paths:
+  /credit/entity/{entityID}/pre-approved-loan/{documentNumber}:
+    get:
+      tags:
+        - Form
+      summary: Returns document in HTML
+      parameters:
+        - in: path
+          name: entityID
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: documentNumber
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreapprovedLoan'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        500:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+  /credit/entity/{entityID}/drafts:
+    get:
+      tags:
+        - Signature Endpoints
+      summary: Returns document in HTML
+      parameters:
+        - in: path
+          name: entityID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Draft'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        500:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+  /entity/credit/{creditID}/signed-documents:
+    get:
+      tags:
+        - Signature Endpoints
+      summary: Returns all signed documents for the given credit id
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: creditID
+          required: true
+          description: Credit Id
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+        500:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+  /entity/credit/document/download/{documentID}:
+    get:
+      tags:
+        - Signature Endpoints
+      summary: Returns document
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: documentID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: A PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+  /entity/credit/{creditID}/central/mareigua:
+    get:
+      tags:
+        - Centrals
+      summary: Returns data returned by mareigua
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: creditID
+          required: true
+          description: Credit Id
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mareigua'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /entity/credit/{creditID}/central/experian:
+    get:
+      tags:
+        - Centrals
+      summary: Returns data returned by experian
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: creditID
+          required: true
+          description: Credit Id
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experian'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /credit/{creditUUID}/terms/accept:
+    put:
+      tags:
+        - Signature Endpoints
+      summary: Terms and conditions acceptance endpoint
+      description: Mark terms and conditions as accepted, returning 200 if everything was OK
+      parameters:
+        - in: path
+          name: creditUUID
+          description: Credit UUID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        406:
+          description: Not Acceptable, was not able to update or not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RuleType'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /credit/{creditUUID}/generate-otp:
+    put:
+      tags:
+        - Signature Endpoints
+      summary: Endpoint to generate an OTP
+      description: Sends an OTP code
+      parameters:
+        - in: path
+          name: creditUUID
+          description: Credit UUID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /credit/{creditUUID}/signature/validate-otp/{OTPCode}:
+    put:
+      tags:
+        - Signature Endpoints
+      summary: Signature confirmation endpoint
+      description: Mark terms and conditions as accepted, returning 200 if everything was OK
+      parameters:
+        - in: path
+          name: creditUUID
+          description: Credit UUID
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: OTPCode
+          description: OTP code
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        406:
+          description: Not Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /credit/{creditUUID}/engine/hardfilter/info:
+    get:
+      tags:
+        - Hard Filters
+      summary: Hard filter engine info
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: creditUUID
+          required: true
+          description: Credit number
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardFilterInfo'
+        400:
+          description: Bad Request
+        404:
+          description: Not Found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error404'
+        500:
+          description: Oops! Bit happens!
+  /credit/{creditUUID}/engine/decision/info:
+    get:
+      tags:
+        - Decision Engine
+      summary: Decision engine info
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: creditUUID
+          required: true
+          description: Credit number
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionInfo'
+        400:
+          description: Bad Request
+        404:
+          description: Not Found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error404'
+        500:
+          description: Oops! Bit happens!
+  /otp/generate/{externalID}:
+    put:
+      tags:
+        - OTP
+      summary: Endpoint that generates an OTP
+      description: Creates an OTP
+      parameters:
+        - in: path
+          name: externalID
+          description: External identification
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateOTP'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTP'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+  /otp/validate/{OTPID}:
+    put:
+      tags:
+        - OTP
+      summary: Endpoint that validates an OTP
+      description: Validates an OTP based in the OTP id returned by `/otp/generate/{externalID}`
+      parameters:
+        - in: path
+          name: OTPID
+          description: OTP identification
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPValidate'
+      responses:
+        200:
+          description: Success if OTP is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        406:
+          description: Not Acceptable. Code is not valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
+  
+  /filters:
+    get:
+      tags:
+        - Hard Filters
+      summary: Brings all available hard filters
+      description: List all hard filters
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Filters'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /filters/operators:
+    get:
+      tags:
+        - Hard Filters
+      summary: Operators for filters
+      description: Operators to use with hard filters
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operators'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /filters/rule_types:
+    get:
+      tags:
+        - Hard Filters
+      summary: Rule types for filters
+      description: Rule types, for this iteration will be available just Filter rule
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RuleType'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /entity/{id}/filters:
+    get:
+      tags:
+        - Hard Filters
+      summary: Gets entity's filters
+      description: Returns all filters for an entity
+      parameters:
+        - in: path
+          name: id
+          description: Entity's ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EntityFilter'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /entity/{id}/costs:
+    get:
+      tags:
+        - Calculator Settings
+      summary: Returns entity's costs
+      parameters:
+        - in: path
+          name: id
+          description: Entity's ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Costs'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /entity/cost/:
+    post:
+      tags:
+        - Calculator Settings
+      summary: Create cost to an entity
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCost'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Cost'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /entity/cost/{id}:
+    patch:
+      tags:
+        - Calculator Settings
+      summary: Update cost. Passing all attributes or the ones needed to be updated
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Cost ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCost'
+      responses:
+        200:
+          description: Update success
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /entity/cost/delete/{id}:
+    delete:
+      tags:
+        - Calculator Settings
+      summary: Delete cost
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Cost ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        403:
+          description: Unsupported/forbidden request to delete a resource
+        404:
+          description: Resource does not exist
+  /entity/filter:
+    post:
+      tags:
+        - Hard Filters
+      summary: Creates a filter
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveEntityFilter'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/EntityFilter'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+  /entity/filter/{id}:
+    patch:
+      tags:
+        - Hard Filters
+      summary: Updates filter
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Entity filter's ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEntityFilter'
+      responses:
+        200:
+          description: Update success
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        403:
+          description: Unsupported/forbidden request to update a resource
+        404:
+          description: Resource does not exist
+  /entity/{id}/decision-engine:
+    get:
+      tags:
+        - Decision Engine
+      summary: Get entity's settings
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Entity's ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionEngine'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        403:
+          description: Unsupported/forbidden request to update a resource
+        404:
+          description: Resource does not exist
+    patch:
+      tags:
+        - Decision Engine
+      summary: Updates entity's settings
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Entity's ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionEngine'
+      responses:
+        200:
+          description: Update success
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        403:
+          description: Unsupported/forbidden request to update a resource
+        404:
+          description: Resource does not exist
+  /entity/decision-engine:
+    post:
+      tags:
+       - Decision Engine
+      summary: Credit viability based on decisión engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDecisionEngine'
+      responses:
+        200:
+          description: Decisión engine response
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ResultDecisionEngine'
+        400:
+          description: Bad Request
+        500:
+          description: Oops! Bit happens!
+  /entity/filter/delete/{id}:
+    delete:
+      tags:
+        - Hard Filters
+      summary: Deletes filter
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Entity filter's ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        403:
+          description: Unsupported/forbidden request to delete a resource
+        404:
+          description: Resource does not exist
+  /entity/{id}/credits:
+    get:
+      tags:
+        - Credits
+      summary: Gets stored Entity's credits
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Entity's ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EntityCreditInternal'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        401:
+          description: Noth Authorized
+  /entity/credit:
+    post:
+      tags:
+        - Credits
+      summary: Creates credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - type
+                - properties
+              properties:
+                type:
+                  type: string
+                  example: credits
+                properties:
+                  $ref: '#/components/schemas/CreateEntityCredit'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - type
+                  - attributes
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 0f9e49c8-6505-11ed-9022-0242ac120002
+                        description: External ID
+                      type:
+                        type: string
+                        example: credits
+                      properties:
+                        $ref: '#/components/schemas/EntityCreditExternal'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'  
+  /validation:
+    post:
+      tags:
+       - Identity Validation
+      summary: Verify credit user identity through OTP code and Truora
+      operationId: validacionUsuario
+      requestBody:
+        description: Información personal del usuario a validar
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+              - identificacion
+              - primerapellido
+              - celular
+              - email
+              properties:
+                identificacion:
+                  type: string
+                  example: '1048327192'
+                primerapellido:
+                  type: string
+                  example: cortez
+                celular:
+                  type: string
+                  example: '3103202938'
+                email:
+                  type: string
+                  format: email
+                  example: user1@mail.com
+              type: object
+      responses:
+        '100':
+          description: Validación activida nivel 2
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: No ha sido posible la verificación de tu identidad, ¿Deseas
+                      intentar otro método?
+                  key_truora:
+                    type: integer
+                    example: 435343
+                type: object
+        '200':
+          description: Validación exitosa
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    msg:
+                      description: Mensaje de envio segun el canal
+                      type: string
+                    otp:
+                      description: codigo otp generado
+                      type: integer
+                  type: object
+                  example:
+                    msg: Se ha enviado el codigo OTP al correo
+                    otp: 383920
+                - properties:
+                    msg:
+                      description: Mensaje de envio segun el canal
+                      type: string
+                    otp:
+                      description: codigo otp generado
+                      type: integer
+                  type: object
+                  example:
+                    msg: Se ha enviado el codigo OTP al celular
+                    otp: 383920
+        '400':
+          description: Error del lado del cliente
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Bad request
+                type: object
+        '401':
+          description: Cliente sin autorización
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Sin autorización
+                type: object
+        '403':
+          description: Acceso denegado al cliente
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Forbidden
+                type: object
+        '404':
+          description: Respuesta de url no encontrada
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Not found
+                type: object
+        '409':
+          description: Usuario ya esta registrado
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Usuario ya se encuentra registrado
+                type: object
+        '500':
+          description: Error del lado del servidor
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Falla en la api
+                type: object
+  /validation/{external_id}:
+    get:
+      tags:
+       - Identity Validation
+      summary: Verify credit user identity through OTP code and Truora
+      parameters:
+        - in: path
+          name: external_id
+          description: External id used to find the OTP verification in progress. For example uuid or integer id used by the entity
+          required: true
+          schema:
+            type: string
+      responses:
+        '100':
+          description: Validación activida nivel 2
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: No ha sido posible la verificación de tu identidad, ¿Deseas
+                      intentar otro método?
+                  key_truora:
+                    type: integer
+                    example: 435343
+                type: object
+        '200':
+          description: Validación exitosa
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    msg:
+                      description: Mensaje de envio segun el canal
+                      type: string
+                    otp:
+                      description: codigo otp generado
+                      type: integer
+                  type: object
+                  example:
+                    msg: Se ha enviado el codigo OTP al correo
+                    otp_uuid: 1973b731-d8b1-4eba-a7a6-6767d3209c08
+                - properties:
+                    msg:
+                      description: Mensaje de envio segun el canal
+                      type: string
+                    otp:
+                      description: codigo otp generado
+                      type: integer
+                  type: object
+                  example:
+                    msg: Se ha enviado el codigo OTP al celular
+                    otp: 383920
+        '400':
+          description: Error del lado del cliente
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Bad request
+                type: object
+        '401':
+          description: Cliente sin autorización
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Sin autorización
+                type: object
+        '403':
+          description: Acceso denegado al cliente
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Forbidden
+                type: object
+        '404':
+          description: Respuesta de url no encontrada
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Not found
+                type: object
+        '409':
+          description: Usuario ya esta registrado
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Usuario ya se encuentra registrado
+                type: object
+        '500':
+          description: Error del lado del servidor
+          content:
+            application/json:
+              schema:
+                properties:
+                  msg:
+                    type: string
+                    example: Falla en la api
+                type: object
+  /validation/check-otp/{externalID}/{otp_code}:
+    get:
+      tags:
+        - Identity Validation
+      summary: Confirm OTP
+      description: Check User's OTP
+      parameters:
+        - in: path
+          name: externalID
+          description: UUID returned by `GET validation/{external_id}` to find the OTP verification in progress.
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: otp_code
+          description: OTP code given by SMS or email
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success. The given OTP is valid for the external_id. Empty response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        406:
+          description: Not accepted. The given OTP or external id don't match
+        400:
+          description: Bad Request. Some missing parameters
+        500:
+          description: Oops! Bit happens!
+  /validation/otp/{externalID}/info:
+    get:
+      tags:
+        - Identity Validation
+      summary: Brings info regarding user identification by OTP
+      security:
+        - ApiKeyAuth: []
+      description: OTP info
+      parameters:
+        - in: path
+          name: externalID
+          description: Credit number
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPValidationInfo'
+        400:
+          description: Bad Request
+        404:
+          description: Not Found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error404'
+        500:
+          description: Oops! Bit happens!
+  /validation/truora/{externalID}/info:
+    get:
+      tags:
+        - Identity Validation
+      summary: Brings info regarding identification by Truora
+      security:
+        - ApiKeyAuth: []
+      description: Truora info
+      parameters:
+        - in: path
+          name: externalID
+          description: Credit number
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TruoraValidationInfo'
+        406:
+          description: Not accepted. The given OTP or external id don't match
+        400:
+          description: Bad Request. Some missing parameters
+        404:
+          description: Not Found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error404'
+        500:
+          description: Oops! Bit happens!
+  /engine/{creditUUID}:
+    get:
+      tags:
+        - Hard Filter Engine
+      summary: Credit viability based on hard filters
+      parameters:
+        - in: path
+          name: creditUUID
+          description: Credit's UUID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Negado Hard filter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Engine'
+        302:
+          description: Redirect to identity validation
+          headers:
+            Location:
+              description: URI containing identity validation  
+              schema: 
+                type: string
+                format: uri
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+components:
+  schemas:
+    Filters:
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Filter'
+    Filter:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: filters
+        attributes:
+          type: object
+          required:
+            - name
+            - code
+            - module
+          properties:
+            name:
+              type: string
+              example: Estrato
+              description: Readable filter name
+            code:
+              type: string
+              example: 'CO01DEM001'
+              description: Filter code
+            filter_values:
+              type: array
+              items:
+                $ref: '#/components/schemas/FilterValues'
+              description: Optional filter's values
+            module:
+              type: string
+              example: 'DEMOGRAFICOS'
+    FilterValues:
+      required:
+        - id
+        - type
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        value:
+          type: string
+          example: 1
+        name:
+          type: string
+          example: Estrato 1
+    RuleType:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: rule_types
+        attributes:
+          type: object
+          required:
+            - name
+            - breake
+          properties:
+            name:
+              type: string
+              example: Filtro
+              description: Filtro o Peso
+            break:
+              type: integer
+              example: 1
+              description: When break has a value of `1` and the filter doesn't match should break the validation and return that the credit was not approved
+    SaveEntityFilter:
+      required:
+        - type
+        - attributes
+      type: object
+      properties:
+        type:
+          type: string
+          example: entity_filters
+        attributes:
+          type: object
+          required:
+            - entity_id
+            - type_rule_id
+            - filter_id
+            - operator
+            - value
+            - value_max
+            - active
+          properties:
+            entity_id:
+              type: string
+              example: 1
+              description: ID from entities.id
+            type_rule_id:
+              type: string
+              example: 1
+              description: Two options 1 => Filtro, 2 => PESO from operators.id
+            filter_id:
+              type: string
+              example: 1
+              description: ID from filters.id
+            operator:
+              type: string
+              example: '<'
+              description: Value from operators.value
+            value:
+              type: string
+              example: 5
+              description: Value to compare with, if operator is of type range, this will be the minimum value of the range
+            value_max:
+              type: string
+              nullable: true
+              example: null
+              description: Max value in a range
+            active:
+              type: integer
+              example: 1
+    UpdateEntityFilter:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: entities
+        attributes:
+          type: object
+          properties:
+            entity_id:
+              type: string
+              example: 1
+              description: ID from entities.id
+            type_rule_id:
+              type: string
+              example: 1
+              description: Two options 1 => Filtro, 2 => PESO from operators.id
+            filter_id:
+              type: string
+              example: 1
+              description: ID from filters.id
+            filter:
+              type: string
+              example: 1
+              description: Revisar si este campo se necesita ya que existe type_rule_id
+            operator:
+              type: string
+              example: '<'
+              description: Value from operators.value
+            value:
+              type: string
+              example: 5
+              description: Value to compare with, if operator is of type range, this will be the minimum value of the range
+            value_max:
+              type: string
+              nullable: true
+              example: null
+              description: Max value in a range
+            active:
+              type: integer
+              example: 1
+    DecisionEngine:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 10
+          description: Entity's ID
+        type:
+          type: string
+          example: decision_engine
+        attributes:
+          type: object
+          required:
+            - employee_capacity_status_id
+            - employee_no_capacity_status_id
+            - selfemployed_capacity_status_id
+            - selfemployed_no_capacity_status_id
+          properties:
+            employee_capacity_status_id:
+              type: string
+              example: 7
+              description: If the user has capacity then the entity can set 8 for Aprobado. The entity can choose from 8 => Aprobado, 9 => Negado or 10 => Estudio.
+            employee_no_capacity_status_id:
+              type: string
+              example: 9
+              description: Same as employee_capacity_status_id
+            selfemployed_capacity_status_id:
+              type: string
+              example: 7
+              description: If the user has capacity then the entity can set 8 for Aprobado. The entity can choose from 8 => Aprobado, 9 => Negado or 10 => Estudio.
+            selfemployed_no_capacity_status_id:
+              type: string
+              example: 9
+              description: Same as selfemployed_capacity_status_id
+            selfemployed_expenses:
+              type: string
+              example: 40
+              description: Percentage used to deduce self-employed user's expenses. The value can be from 0 to 99.99
+            selfemployed_additional_penalty:
+              type: string
+              example: 10
+              description: Additional deductible percentage. The value can be from 0 to 99.99
+            employee_expenses:
+              type: string
+              example: 40
+              description: Percentage used to deduce employee user's expenses. The value can be from 0 to 99.99
+            employee_additional_penalty:
+              type: string
+              example: 10
+              description: Additional deductible percentage. The value can be from 0 to 99.99
+    Operators:
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operator'
+    Operator:
+      required:
+        - id
+        - type
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: operators
+        attributes:
+          type: object
+          properties:
+            name:
+              type: string
+              example: '='
+            is_range:
+              type: string
+              example: 0
+    EntityFilter:
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: entity_filters
+        attributes:
+          type: object
+          properties:
+            operator:
+              type: string
+              example: '<='
+            value:
+              type: string
+              example: 10
+            value_max:
+              type: string
+              nullable: true
+              example: null
+            active:
+              type: integer
+              example: 1
+            filter_id:
+              type: string
+              example: 1
+            type_rule_id:
+              type: string
+              example: 1
+    Costs:
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cost'
+    CreateEntityCredit:
+      required:
+        - document
+        - lastname
+        - name
+        - birth_date
+        - gender
+        - phone
+        - state
+        - city
+        - address
+        - email
+        - activity
+        - agency
+        - stratum
+        - revenue
+        - expenses
+        - study
+        - type_contract
+        - company
+        - credit_line
+        - credit_date_disbursement
+        - credit_value_disbursed
+        - credit_date_installment
+        - credit_value_installment
+        - credit_payment_method
+        - credit_period
+        - credit_installment_term
+        - family_reference_name
+        - family_reference_lastname
+        - family_reference_phone
+        - family_reference_relationship
+        - personal_reference_name
+        - personal_reference_lastname
+        - personal_reference_phone
+        - personal_reference_relationship
+      properties:
+        document:
+          type: string
+          example: 1234567890
+        lastname:
+          type: string
+          example: Doe
+        name:
+          type: string
+          example: John
+        birth_date:
+          type: string
+          example: 1980-06-03
+        gender:
+          type: string
+          example: Masculino
+        phone:
+          type: string
+          example: 3211234567
+        state:
+          type: string
+          example: Bogotá DC
+        city:
+          type: string
+          example: Bogotá DC
+        address:
+          type: string
+          example: Avenida siempre viva 12345
+        email:
+          type: string
+          example: john.doe@gmail.com
+        activity:
+          type: string
+          example: Empleado
+        agency:
+          type: string
+          example: Nombre de agencia
+        stratum:
+          type: string
+          example: 2
+        revenue:
+          type: string
+          example: 1000000
+        expenses:
+          type: string
+          example: 500000
+        study:
+          type: string
+          example: Pregrado
+        type_contract:
+          type: string
+          example: Término indefinido
+        company:
+          type: string
+          example: Ecopetrol
+        credit_line:
+          type: string
+          example: Línea de crédito
+        credit_date_disbursement:
+          type: string
+          example: 2022-10-20
+        credit_value_disbursed:
+          type: string
+          example: 400000
+        credit_date_installment:
+          type: string
+          example: 2022-12-20
+        credit_value_installment:
+          type: string
+          example: 40000
+        credit_payment_method:
+          type: string
+          example: Método de pago
+        credit_period:
+          type: string
+          example: Período
+        credit_installment_term:
+          type: string
+          example: 10
+        family_reference_name:
+          type: string
+          example: Hanna
+        family_reference_lastname:
+          type: string
+          example: Montana
+        family_reference_phone:
+          type: string
+          example: 3331234567
+        family_reference_relationship:
+          type: string
+          example: otro
+        family_reference_relationship_other:
+          type: string
+          example: Esposa
+        personal_reference_name:
+          type: string
+          example: Daenerys
+        personal_reference_lastname:
+          type: string
+          example: Targaryen
+        personal_reference_phone:
+          type: string
+          example: 3002842840
+        personal_reference_relationship:
+          type: string
+          example: Amigo
+        personal_reference_relationship_other:
+          type: string
+          example:
+    EntityCreditInternal:
+      required:
+        - id
+        - document
+        - lastname
+        - name
+        - birth_date
+        - gender
+        - phone
+        - city
+        - state
+        - address
+        - email
+        - activity
+        - agency
+        - stratum
+        - revenue
+        - expenses
+        - study
+        - type_contract
+        - company
+        - credit_number
+        - credit_line
+        - credit_date_disbursement
+        - credit_value_disbursed
+        - credit_date_installment
+        - credit_value_installment
+        - credit_payment_method
+        - credit_period
+        - credit_installment_term
+        - family_reference_name
+        - family_reference_lastname
+        - family_reference_phone
+        - family_reference_relationship
+        - personal_reference_name
+        - personal_reference_lastname
+        - personal_reference_phone
+        - personal_reference_relationship
+        
+        - status
+      properties:
+        id:
+          type: string
+          example: 1
+        credit_number:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: UUID
+        document:
+          type: string
+          example: 1234567890
+        lastname:
+          type: string
+          example: Doe
+        name:
+          type: string
+          example: John
+        birth_date:
+          type: string
+          example: 1980-06-03
+        gender:
+          type: string
+          example: Masculino
+        phone:
+          type: string
+          example: 3211234567
+        state:
+          type: string
+          example: Bogotá DC
+        city:
+          type: string
+          example: Bogotá DC
+        address:
+          type: string
+          example: Avenida siempre viva 12345
+        email:
+          type: string
+          example: john.doe@gmail.com
+        activity:
+          type: string
+          example: Empleado
+        agency:
+          type: string
+          example: Nombre de agencia
+        stratum:
+          type: string
+          example: 2
+        revenue:
+          type: string
+          example: 1000000
+        expenses:
+          type: string
+          example: 500000
+        study:
+          type: string
+          example: Pregrado
+        type_contract:
+          type: string
+          example: Término indefinido
+        company:
+          type: string
+          example: Ecopetrol
+        credit_line:
+          type: string
+          example: Línea de crédito
+        credit_date_disbursement:
+          type: string
+          example: 2022-10-20
+        credit_value_disbursed:
+          type: string
+          example: 400000
+        credit_date_installment:
+          type: string
+          example: 2022-12-20
+        credit_value_installment:
+          type: string
+          example: 40000
+        credit_payment_method:
+          type: string
+          example: Método de pago
+        credit_period:
+          type: string
+          example: Período
+        credit_installment_term:
+          type: string
+          example: 10
+        family_reference_name:
+          type: string
+          example: Hanna
+        family_reference_lastname:
+          type: string
+          example: Montana
+        family_reference_relationship:
+          type: string
+          example: otro
+        family_reference_relationship_other:
+          type: string
+          example: espa
+        family_reference_phone:
+          type: string
+          example: 3331234567
+        personal_reference_name:
+          type: string
+          example: Daenerys
+        personal_reference_lastname:
+          type: string
+          example: Targaryen
+        personal_reference_phone:
+          type: string
+          example: 3002842840
+        personal_reference_relationship:
+          type: string
+          example: Amigo
+        personal_reference_relationship_other:
+          type: string
+          example:
+        entity_id:
+          type: string
+          example: 10
+    EntityCreditExternal:
+      required:
+        - credit_number
+        - document
+        - lastname
+        - name
+        - birth_date
+        - gender
+        - phone
+        - state
+        - city
+        - address
+        - email
+        - activity
+        - agency
+        - stratum
+        - revenue
+        - expenses
+        - study
+        - type_contract
+        - company
+        - credit_line
+        - credit_date_disbursement
+        - credit_value_disbursed
+        - credit_date_installment
+        - credit_value_installment
+        - credit_payment_method
+        - credit_period
+        - credit_installment_term
+        - family_reference_name
+        - family_reference_lastname
+        - family_reference_phone
+        - family_reference_relationship
+        - family_reference_relationship_other
+        - personal_reference_name
+        - personal_reference_lastname
+        - personal_reference_phone
+        - personal_reference_relationship
+        - personal_reference_relationship_other
+        - status
+      properties:
+        credit_number:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: UUID
+        document:
+          type: string
+          example: 1234567890
+        lastname:
+          type: string
+          example: Doe
+        name:
+          type: string
+          example: John
+        birth_date:
+          type: string
+          example: 1980-06-03
+        gender:
+          type: string
+          example: Masculino
+        phone:
+          type: string
+          example: 3211234567
+        state:
+          type: string
+          example: Bogotá DC
+        city:
+          type: string
+          example: Bogotá DC
+        address:
+          type: string
+          example: Avenida siempre viva 12345
+        email:
+          type: string
+          example: john.doe@gmail.com
+        activity:
+          type: string
+          example: Empleado
+        agency:
+          type: string
+          example: Nombre de agencia
+        stratum:
+          type: string
+          example: 2
+        revenue:
+          type: string
+          example: 1000000
+        expenses:
+          type: string
+          example: 500000
+        study:
+          type: string
+          example: Pregrado
+        type_contract:
+          type: string
+          example: Término indefinido
+        company:
+          type: string
+          example: Ecopetrol
+        credit_line:
+          type: string
+          example: Línea de crédito
+        credit_date_disbursement:
+          type: string
+          example: 2022-10-20
+        credit_value_disbursed:
+          type: string
+          example: 400000
+        credit_date_installment:
+          type: string
+          example: 2022-12-20
+        credit_value_installment:
+          type: string
+          example: 40000
+        credit_payment_method:
+          type: string
+          example: Método de pago
+        credit_period:
+          type: string
+          example: Período
+        credit_installment_term:
+          type: string
+          example: 10
+        family_reference_name:
+          type: string
+          example: Hanna
+        family_reference_lastname:
+          type: string
+          example: Montana
+        family_reference_phone:
+          type: string
+          example: 3331234567
+        family_reference_relationship:
+          type: string
+          example: otro
+        family_reference_relationship_other:
+          type: string
+          example: esposa
+        personal_reference_name:
+          type: string
+          example: Daenerys
+        personal_reference_lastname:
+          type: string
+          example: Targaryen
+        personal_reference_phone:
+          type: string
+          example: 3002842840
+        personal_reference_relationship:
+          type: string
+          example: Amigo
+        personal_reference_relationship_other:
+          type: string
+          example:
+        status:
+          type: string
+          example: Iniciado
+    CreateCost:
+      required:
+        - type
+        - attributes
+      type: object
+      properties:
+        type:
+          type: string
+          example: costs
+        attributes:
+          type: object
+          required:
+            - name
+            - description
+            - min_value
+            - max_value
+            - installment
+            - annual_interest
+            - month_interest
+            - guarantee_fund
+            - insurance
+            - status
+            - entity_id
+            - initial_fee
+          properties:
+            entity_id:
+              type: string
+              example: 10
+              description: ID from entities.id
+            name:
+              type: string
+              example: 'Producto 1'
+              description: 'Cost name'
+            description:
+              type: string
+              example: 'Ortodoncia Invisible'
+              description: 'Cost description'
+            min_value:
+              type: string
+              example: 1000000
+              description: 'Minimum amount to lend'
+            max_value:
+              type: string
+              example: 3000000
+              description: 'Maximum amount to lend'
+            installment:
+              type: string
+              example: 24
+              description: "Max quantity of installments"
+            annual_interest:
+              type: string
+              example: 36.0
+              description: "Annyal interest rate"
+            month_interest:
+              type: string
+              example: 2.6
+              description: "Monthly interest rate"
+            guarantee_fund:
+              type: string
+              example: 10
+              description: "Guarantee fund rate"
+            insurance:
+              type: string
+              example: 28000
+              description: "Insurance"
+            initial_fee:
+              type: string
+              example: 40.0
+              description: "Percentage for initial fee"
+            active:
+              type: integer
+              example: 1
+    CreateDecisionEngine:
+      required:
+       - identity
+       - external_id
+      type: object
+      properties:
+        identity:
+          type: string
+          example: "10740393"
+        external_id:
+          type: string
+          example: "a19f7b71-b968-49c7-953c-825068360c1f"
+    Cost:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: costs
+        attributes:
+          type: object
+          required:
+            - id
+            - name
+            - description
+            - min_value
+            - max_value
+            - installment
+            - annual_interest
+            - month_interest
+            - guarantee_fund
+            - insurance
+            - status
+            - entity_id
+            - initial_fee
+          properties:
+            entity_id:
+              type: string
+              example: 10
+              description: ID from entities.id
+            name:
+              type: string
+              example: 'Producto 1'
+              description: 'Cost name'
+            description:
+              type: string
+              example: 'Ortodoncia Invisible'
+              description: 'Cost description'
+            min_value:
+              type: string
+              example: 1000000
+              description: 'Minimum amount to lend'
+            max_value:
+              type: string
+              example: 3000000
+              description: 'Maximum amount to lend'
+            installment:
+              type: string
+              example: 24
+              description: "Max quantity of installments"
+            annual_interest:
+              type: string
+              example: 36.0
+              description: "Annual interest rate"
+            month_interest:
+              type: string
+              example: 2.6
+              description: "Monthly interest rate"
+            guarantee_fund:
+              type: string
+              example: 10
+              description: "Guarantee fund rate"
+            insurance:
+              type: string
+              example: 28000
+              description: "Insurance"
+            initial_fee:
+              type: string
+              example: 40.0
+              description: "Percentage for initial fee"
+            status:
+              type: integer
+              example: 1
+    UpdateCost:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: costs
+        attributes:
+          type: object
+          properties:
+            name:
+              type: string
+              example: 'Producto 1'
+              description: 'Cost name'
+            description:
+              type: string
+              example: 'Ortodoncia Invisible'
+              description: 'Cost description'
+            min_value:
+              type: string
+              example: 1000000
+              description: 'Minimum amount to lend'
+            max_value:
+              type: string
+              example: 3000000
+              description: 'Maximum amount to lend'
+            installment:
+              type: string
+              example: 24
+              description: "Max quantity of installments"
+            annual_interest:
+              type: string
+              example: 36.0
+              description: "Annyal interest rate"
+            month_interest:
+              type: string
+              example: 2.6
+              description: "Monthly interest rate"
+            guarantee_fund:
+              type: string
+              example: 10
+              description: "Guarantee fund rate"
+            insurance:
+              type: string
+              example: 28000
+              description: "Insurance"
+            initial_fee:
+              type: string
+              example: 40.0
+              description: "Percentage for initial fee"
+            status:
+              type: integer
+              example: 1
+    Engine:
+      properties:
+        data:
+          type: object
+          properties:
+            msg:
+              type: string
+              example: Negado Hard filter
+    ResultDecisionEngine:
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              example: status
+            id:
+              type: string
+              example: 8
+            attributes:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Aprobado
+                suggested_capacity:
+                  type: integer
+                  example: null
+    GenerateOTP:
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              example: otp
+            attributes:
+              type: object
+              required:
+                - external_id
+                - ip
+                - email_template
+                - sms_template
+                - whatsapp_template
+                - payload
+              properties:
+                external_id:
+                  type: string
+                  example: 8d1ba3b1-778e-4d72-ae63-03da41a2c8de
+                  description: Id used by the customer, just for reference
+                payload:
+                  type: object
+                  example: {"1":"Indental", "2":"replace_otp_code"}
+                ip:
+                  type: string
+                  example: 200.123.23.20
+                phone:
+                  type: string
+                  example: 3211234567
+                  description: Used for SMS or Whatsapp message
+                sms_template:
+                  type: string
+                  example: "{{1}} te informa que tu solicitud No.{{2}} se encuentra ✅ “APROBADA” ingresa a tu correo y valida las condiciones."
+                  description: SMS template, previously authorized
+                whatsapp_template:
+                  type: string
+                  example: "📝 {{1}} te informa que el código para firmar tu pagare y anexos del crédito es *{{2}}* Ingresa a tu correo y valida las condiciones de desembolso."
+                  description: Whatsapp template, previously authorized
+    OTP:
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - id
+            - attributes
+          properties:
+            type:
+              type: string
+              example: otp
+            id:
+              type: string
+              example: 9da6b66e-1cc8-427f-bb87-658dcfd86f8f
+            attributes:
+              type: object
+
+              properties:
+                sms_message_id:
+                  type: string
+                  example: 8d1ba3b1-778e-4d72-ae63-03da41a2c8de
+                email_message_id:
+                  type: string
+                  example: 231231212312
+                whatsapp_message_id:
+                  type: string
+                  example: b31ff7d2-e495-490e-ade9-3ec8423248aa
+    OTPValidate:
+      required:
+        - otp_code
+      properties:
+        otp_code:
+          type: string
+          example: 321654
+          description: Code sent to email/phone
+    OTPValidationInfo:
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - id
+            - attributes
+          properties:
+            type:
+              type: string
+              example: OTPValiationInfo
+            id:
+              type: string
+              example: 1
+              description: OTP's id
+            attributes:
+              type: object
+              required:
+                - ismovil
+                - isemail
+                - code
+                - verify
+                - created_at
+                - external_id
+                - uuid
+                - ip
+              properties:
+                ismovil:
+                  type: string
+                  description: 1 If the OTP was sent to mobile, 0 otherwise
+                  example: 1
+                isemail:
+                  type: string
+                  description: 1 If the OTP was sent to an email, 0 otherwise
+                  example: 0
+                code:
+                  type: string
+                  description: OTP code
+                  example: 332211
+                verify:
+                  type: string
+                  description: 1 If the code was verified, 0 otherwise
+                  example: 1
+                userexperian_id:
+                  type: string
+                  description: If the OTP was used to validate the identity. This ID belongs to user_experian, empty otherwise
+                  example: 34
+                created_at:
+                  type: string
+                  description: OTP's creation date
+                  example: 2023-02-16T16:56:19.000000Z
+                updated_at:
+                  type: string
+                  description: OTP's update date. When verify is 1 this field corresponds to the date the OTP was verified
+                  example: 2023-02-16T16:56:37.000000Z
+                external_id:
+                  type: string
+                  description: Credit number (credit uuid)
+                  example: c7522fd6-b5cc-4f0b-ab85-255c04f6fe0a
+                uuid:
+                  type: string
+                  description: OTP's uuid
+                  example: 987b9b8a-eb18-4fff-b354-08b09f492c99
+                phone:
+                  type: string
+                  description: This is the phone number where OTP was sent to, empty otherwise
+                  example: 3163078938
+                email:
+                  type: string
+                  description: This is the email where OTP was sent to, empty otherwise
+                  example: ''
+                email_template:
+                  type: string
+                  description: Template used for email
+                  example: ''
+                sms_template:
+                  type: string
+                  description: Template used for phone
+                  example: "{{1}} te informa que tu codigo de validación de identidad es {{2}}"
+                whatsapp_template:
+                  type: string
+                  description: Template used for whatsapp
+                  example: "*{{1}}* te informa que tu codigo de validación de identidad es *{{2}}*"
+                ip:
+                  type: string
+                  description: IP where the OTP was retrieved/validated
+                  example: 200.345.23.3
+                sms_message_id:
+                  type: string
+                  example: 8d1ba3b1-778e-4d72-ae63-03da41a2c8de
+                email_message_id:
+                  type: string
+                  example: ""
+                whatsapp_message_id:
+                  type: string
+                  example: b31ff7d2-e495-490e-ade9-3ec8423248aa
+    TruoraValidationInfo:
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - id
+            - attributes
+          properties:
+            type:
+              type: string
+              example: TruoraValiationInfo
+            id:
+              type: string
+              example: 1
+              description: OTP's id
+            attributes:
+              type: object
+              properties:
+                event_id:
+                  type: string
+                  description: Truora's event identification
+                  example: HKE2a5135655403dd67caec60071c2976dd42b6e07d
+                event_type:
+                  type: string
+                  description: Truora's event type
+                  example: identity_process
+                result:
+                  type: object
+                  description: Truora's response
+                  example:
+                    account_id: abcde
+                    client_id: TCI0e9a1dd004dce91a054f1dc030a68776
+                    country: CO
+                    creation_date: '2022-12-05T23:12:43.740729677Z'
+                    flow_id: IPFbd4980f5c8b8e78a1dbb5c78323b56ab
+                    flow_version: 1
+                    process_id: IDP40a56194f24d89295e96c574e03085dc
+                    status: success
+                    update_date: '2022-12-05T23:15:38Z'
+                    validations:
+                      - account_id: a19f7b71-b968-49c7-953c-825068360c1f
+                        attachment_status: valid
+                        attachment_validations:
+                          - attachment_type: document-front
+                            result: valid
+                            validation_name: Validation of face detection
+                            validation_type: face-detection-validation
+                          - attachment_type: document-front
+                            result: valid
+                            validation_name: Validation of document text legibility
+                            validation_type: ocr-validation
+                          - attachment_type: document-reverse
+                            result: valid
+                            validation_name: Validation of document text legibility
+                            validation_type: ocr-validation
+                        creation_date: '2022-12-05T23:13:05.64371844Z'
+                        details:
+                          background_check:
+                            check_id: CHKca6f9445297785bbf3d28faaca2b2c19
+                            check_url: https://api.checks.truora.com/v1/checks/CHKca6f9445297785bbf3d28faaca2b2c19
+                          document_details:
+                            birth_place: NEIVA
+                            country: CO
+                            creation_date: '2022-12-05T23:13:05.584802995Z'
+                            date_of_birth: '1997-09-27T00:00:00Z'
+                            document_number: '1075306958'
+                            document_type: national-id
+                            expedition_place: NEIVA
+                            gender: male
+                            height: '1.76'
+                            issue_date: '2015-10-05T00:00:00Z'
+                            last_name: FIERRO VALDERRAMA
+                            mime_type: image/png
+                            name: JOSE EUGENIO
+                            national_registrar: CARLOS ARIEL SANCHEZ TORRES
+                            production_data: P-1900100-00771407-M-1075306958-20151204
+                            rh: A+
+                            update_date: '2022-12-05T23:13:58.047352195Z'
+                          document_validations:
+                            data_consistency:
+                              - manually_reviewed: false
+                                message: The document has a valid document number or NUIP
+                                result: valid
+                                validation_name: Validation of Document Number
+                                validation_type: document-number-validation
+                              - manually_reviewed: false
+                                message: The date of birth is valid
+                                result: valid
+                                validation_name: Validation of date of birth
+                                validation_type: date-of-birth-validation
+                            government_database:
+                              - manually_reviewed: false
+                                message: Document is current and registered in main identity database
+                                result: valid
+                                validation_name: Validation of Government Database - Registraduría
+                                validation_type: government-database-digital-validation-certificate-cedula
+                            image_analysis:
+                              - manually_reviewed: false
+                                message: Validation is disabled by config
+                                result: skipped
+                                validation_name: Validation of document picture alterations
+                                validation_type: fake-picture-validation
+                            photo_of_photo:
+                              - manually_reviewed: false
+                                message: Validation is disabled by config
+                                result: skipped
+                                validation_name: Validation of photo of photo
+                                validation_type: photo-of-photo-validation
+                            photocopy_analysis:
+                              - manually_reviewed: false
+                                message: The document is not a photocopy
+                                result: valid
+                                validation_name: Validation of Photocopy Analysis
+                                validation_type: photocopy-validation
+                        identity_process_id: IDP40a56194f24d89295e96c574e03085dc
+                        ip_address: 190.128.7.73
+                        remaining_retries: 2
+                        type: document-validation
+                        validation_id: VLD97ea402257921035fff079afd01a98d9
+                        validation_status: success
+                      - account_id: a19f7b71-b968-49c7-953c-825068360c1f
+                        creation_date: '2022-12-05T23:14:25.660159521Z'
+                        details:
+                          face_recognition_validations:
+                            confidence_score: 0.98
+                            similarity_status: success
+                        identity_process_id: IDP40a56194f24d89295e96c574e03085dc
+                        ip_address: 190.128.7.73
+                        threshold: 0.65
+                        type: face-recognition
+                        validation_id: VLD4b7bb0c4765b5c1a0be82b855838bc21
+                        validation_status: success
+    DecisionInfo:
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - id
+            - attributes
+          properties:
+            type:
+              type: string
+              example: DecisionInfo
+            id:
+              type: string
+              example: 1
+              description: UserIncome's id
+            attributes:
+              type: object
+              properties:
+                engine_result:
+                  type: object
+                  description: Decision Engine result
+                  example:
+                    data:
+                      type: status
+                      id: 8
+                      attributes:
+                        name: Aprobado
+                        suggested_capacity: null
+    HardFilterInfo:
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - id
+            - attributes
+          properties:
+            type:
+              type: string
+              example: HardFilterInfo
+            id:
+              type: string
+              example: 1
+              description: Qualitie's id
+            attributes:
+              type: object
+              properties:
+                engine_result:
+                  type: object
+                  description: Hard Filter engine result
+                  example:
+                    result: approved
+                    entity_filters:
+                      - code: CO01DEM001
+                        name: Estrato - Todos
+                        experian_value: 0
+                        entity_value: '2'
+                        operator: '>='
+                        result: approved
+                result:
+                  type: string
+                  description: Final result
+                  example: approved
+                document_number:
+                  type: string
+                  description: User's identification number
+                  example: 18004714
+                request_date:
+                  type: string
+                  description: Petition date
+                  example: 2023-02-17
+    Draft:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: draft
+        attributes:
+          type: object
+          required:
+            - name
+            - disk_name
+            - content
+            - entity_id
+          properties:
+            entity_id:
+              type: string
+              example: 10
+              description: ID from entities.id
+            name:
+              type: string
+              example: 'Aceptación - Fianza - Afianzamos - Indental'
+              description: 'Document name'
+            disk_name:
+              example: aceptacion-fianza-afianzamos-indental
+              description: Clean name to write down in the disk
+            content:
+              type: string
+              example: '<html>....</html>'
+              description: 'HTML content'
+    Document:
+      required:
+        - id
+        - type
+        - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        type:
+          type: string
+          example: document
+        attributes:
+          type: object
+          required:
+            - name
+            - disk_name
+            - credit_id
+            - size
+            - content_type
+          properties:
+            credit_id:
+              type: string
+              example: 10
+              description: ID from credits.id
+            name:
+              type: string
+              example: 'Aceptación - Fianza - Afianzamos - Indental'
+              description: 'Document name'
+            disk_name:
+              example: 1-aceptacion-fianza-afianzamos-indental.pdf
+              description: Clean name to write down in the disk
+            content_type:
+              type: string
+              example: 'application/pdf'
+              description: 'Kind of file'
+            size:
+              type: string
+              example: 1024
+              description: Size of the file in bytes
+    Error400:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - detail
+              - status
+              - title
+            properties:
+              status:
+                type: string
+                example: 400
+                description: 'HTTP status code applicable to this problem'
+              code:
+                type: string
+                example: 221
+                description: 'Internal app error code'
+              title:
+                type: string
+                example: 'Invalid Parameter'
+                description: 'A short, human-readable summary of the problem'
+              source:
+                type: object
+                properties:
+                  parameter:
+                    type: string
+                    example: 'entity_id'
+              detail:
+                type: string
+                example: 'Parameter is required.'
+                description: 'Especific error description'
+    Error401:
+      type: object
+      description: Trying to access unauthorized information
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - detail
+              - status
+              - title
+            properties:
+              status:
+                type: string
+                example: 401
+                description: 'HTTP status code applicable to this problem'
+              code:
+                type: string
+                example: 221
+                description: 'Internal app error code'
+              title:
+                type: string
+                example: 'Unauthorized'
+                description: 'A short, human-readable summary of the problem'
+              detail:
+                type: string
+                example: 'Unauthorized'
+                description: 'Especific error description'
+    Error404:
+      type: object
+      description: The data doesn't exist
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - detail
+              - status
+              - title
+            properties:
+              status:
+                type: string
+                example: 404
+                description: 'HTTP status code applicable to this problem'
+              code:
+                type: string
+                example: 404
+                description: 'Internal app error code'
+              title:
+                type: string
+                example: 'Info not found'
+                description: 'A short, human-readable summary of the problem'
+              detail:
+                type: string
+                example: 'Not Found'
+                description: 'Especific error description'
+    Error500:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - detail
+              - status
+              - title
+            properties:
+              status:
+                type: string
+                example: 500
+                description: 'HTTP status code applicable to this problem'
+              code:
+                type: string
+                example: 0
+                description: 'Internal server error code'
+              title:
+                type: string
+                example: 'Internal server error'
+                description: 'A short, human-readable summary of the problem'
+              detail:
+                type: string
+                example: 'ERROR: Class "Tests\Feature\App\Http\Controllers\Exception" not found'
+                description: 'Especific error description'
+    EmptyResponse:
+      type: object
+      properties:
+        data:
+          type: string
+          example: null
+    PreapprovedLoan:
+      type: object
+      required:
+          - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              example: 12345567
+              description: Users' document number
+            type:
+              type: string
+              example: Preapproved-Loan
+            attributes:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+                  example: 2000000
+                  description: Max loan amount
+    Mareigua:
+      type: object
+      required:
+          - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              example: 31
+              description: User income ID
+            type:
+              type: string
+              example: Mareigua
+            attributes:
+              type: object
+              required:
+                - document
+                - income
+                - response
+              properties:
+                document:
+                  type: string
+                  description: User's document number
+                  example: 18004714
+                income:
+                  type: string
+                  example: 2000000
+                  description: User's income
+                response:
+                  type: string
+                  description: Mareigua's response
+                  example:
+                    AFP: AFP prueba
+                    EPS: EPS prueba
+                    fecha: 12/7/2022 10:24:29 AM
+                    aportantes:
+                      - media_ingresos: 16500000
+                        resultado_pagos:
+                          - ingresos: 500000
+                            realizo_pago: true
+                            ano_periodo_validado: 2022
+                            mes_periodo_validado: 12
+                        promedio_ingresos: 16500000
+                        razón_social_aportante: Empresa1
+                        tipo_cotizante_persona_natural: 1
+                        numero_identificacion_aportante: '4325421'
+                        tipo_identificacion_aportante_id: 3
+                        tiene_salario_integral_actualmente: false
+                    consulta_id: 361239
+                    respuesta_id: 4
+                    primer_nombre_persona_natural: JUAN
+                    segundo_nombre_persona_natural: null
+                    primer_apellido_persona_natural: PATIÑO
+                    segundo_apellido_persona_natural: ARCOS
+                    numero_identificacion_persona_natural: '18004712'
+                    tipo_identificacion_persona_natural_id: 1
+    Experian:
+      type: object
+      required:
+          - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              example: 33
+              description: User experian ID
+            type:
+              type: string
+              example: Experian
+            attributes:
+              type: object
+              properties:
+                identification:
+                  type: string
+                  description: Users' identification number
+                  example: 0018004714
+                name:
+                  type: string
+                  description: User's name
+                  example: JOHN
+                lastname:
+                  type: string
+                  description: User's lastname
+                  example: DOE
+                response:
+                  type: string
+                  example: '{"user":{"name":"JOHN","lastname":"DOE","validate":1,"rut":1,"idvaliditycode_id":1,"exp_date":"1995-08-22","exp_city":"SAN ANDRES","departament":"SAN ANDRES","identification":"0018004714","age":"55","consult_date":"2023-02-15 11:13:09","sec_code":"AQW2435","updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":33},"emails":[{"email":"johndoe@gmail.com","act_date":"2022-09-30","crea_date":"2004-01-01","lastcons_date":"2022-10-01","userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":30}],"agreg_liabilities":{"monthlyfee":"6625000.00","entry":"14968000.00","fee_percentage":"44","current_accountc":"0","closed_accountc":"1","monthexp_accountc":"206","lastopen_accountc":"2006-02-27","lastclos_accountc":"2011-03-31","numembar_accountc":"0","lastembar_cuentac":null,"current_accounta":"1","closed_accounta":"3","monthexp_accounta":"301","lastopen_accounta":"2009-04-03","lastclos_accounta":"2012-07-31","numembar_accounta":"0","lastembar_accounta":null,"userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":33},"alerts":[{"alertsourcecode_id":6,"name":"P.e.p","key":"100018004764990003004","placement":"2023-02-15","expiration":"2023-02-15","modification":"2023-02-15","alertcode":"203","description":"Coincidencia solo por nombre en lista figura publica al 20230214","userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":57},{"alertsourcecode_id":5,"name":"Listas restrictivas","key":"100018004764990003004","placement":"2023-02-15","expiration":"2023-02-15","modification":"2023-02-15","alertcode":"304","description":"No se encuentra coincidencia con listas restrictivas de id consultado al 20230215","userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":58}],"saving_accounts":[{"key":"10001800471251023201944492535010000000","blocked":1,"entity":"BANCOLOMBIA","number":"249253501","open_date":"2009-04-03","holderstatuscode_id":1,"office":"CENTRO COMERCIAL SANTAFE","city":"BOGOTA D.C.","dane_code":"11001000","identitycode_id":"2","identifies":"00890903938","sectorcode_id":"1","account_typecode_id":2,"accountstatecode_id":1,"date":"2023-01-31","userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":30}],"checking_accounts":null,"movements_ca":[{"currency_code_id":2,"date":"2023-01-31","cre_efect":"0.00","deb_efect":"0.00","cre_trans":"0.00","deb_trans":"0.00","saving_account_id":30,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":29}],"movements_cc":null,"phones":[{"phone":"3163078938","act_date":"2022-11-30","crea_date":"2004-01-01","consul_date":"2022-12-01","userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":30}],"addresses":[{"departcode":"11001000","countrycode":"co","address":"KR 54 D 188 41","act_date":"2022-12-31","crea_date":"2007-10-01","lastconf_date":"2022-09-01","city":"BOGOTA. D.C.","departament":"BOGOTA. D.C.","userexperian_id":33,"updated_at":"2023-02-15T16:13:10.000000Z","created_at":"2023-02-15T16:13:10.000000Z","id":31}]}'
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: loginUsuario
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: AI-Signature
+
