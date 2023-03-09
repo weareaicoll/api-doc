@@ -463,7 +463,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error500'
-  
   /filters:
     get:
       tags:
@@ -1423,6 +1422,173 @@ paths:
           description: Bad Request
         500:
           description: Oops! Bit happens!
+  /jwt/ally/list:
+    get:
+      tags:
+        - JWT
+      summary: Credit viability based on hard filters
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List all allies for the user's entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Allies'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        401:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+  /jwt/ally:
+    post:
+      tags:
+        - JWT
+      summary: Add ally
+      requestBody:
+        description: Información personal del usuario a validar
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - type
+                - properties
+              properties:
+                type:
+                  type: string
+                  example: ally
+                properties:
+                  type: object
+                  required:
+                    - name
+                    - email
+                    - password
+                  properties:
+                    name:
+                      type: string
+                      description: Ally's name
+                      example: John Doe
+                    email:
+                      type: string
+                      description: Ally's email used for login
+                      example: john.doe@aicoll.co
+                    password:
+                      type: string
+                      description: Ally's password
+                      example: secretpassword
+                    phone:
+                      type: string
+                      description: Ally's phone
+                      example: 3211234567
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Ally data updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ally'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        401:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+  /jwt/ally/{allyID}:
+    put:
+      tags:
+        - JWT
+      summary: Update ally information
+      parameters:
+        - in: path
+          name: allyID
+          description: Ally's ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update ally information
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ally'
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Ally data updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Ally'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        401:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
+  /jwt/ally/delete/{allyID}:
+    delete:
+      tags:
+        - JWT
+      summary: Delete ally
+      parameters:
+        - in: path
+          name: allyID
+          description: Ally's ID
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Ally successfully deleted
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/EmptyResponse'
+        400:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        401:
+          description: Bad request, generic example
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error401'
 components:
   schemas:
     Filters:
@@ -3215,6 +3381,46 @@ components:
           type: string
           example: nickname@aicoll.co
           description: Ally's email
+    Allies:
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ally'
+    Ally:
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          example: 31
+          description: Ally's ID
+        type:
+          type: string
+          example: ally
+        attributes:
+          type: object
+          properties:
+            name:
+              type: string
+              example: John Doe
+              description: Ally's name
+            email:
+              type: string
+              example: john.doe@alcanos.com
+              description: Ally's email used for login
+            password:
+              type: string
+              example: secretpassword
+              description: Ally's password
+            phone:
+              type: string
+              example: 3211234567
+              description: Ally's phone
   securitySchemes:
     SessionAuth:
       type: apiKey
